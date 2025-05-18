@@ -6,6 +6,7 @@
   "types": "lib/index.d.ts",
   "type": "commonjs",
   "scripts": {
+    "build": "tsc",
     "compileLib": "tsc",
     "publishLib": "npm publish",
     "test:vite": "vitest",
