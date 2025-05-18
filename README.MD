@@ -34,13 +34,13 @@ Make sure to set up your IPN URL in your PesaPal account settings so that the ap
 
 ## Installation
 
-// with npm
+with npm
 
 ```bash
 npm install pesapal3-sdk
 ```
 
-// with yarn
+with yarn
 
 ```bash
 yarn add pesapal3-sdk
