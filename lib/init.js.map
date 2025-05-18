@@ -1,0 +1,1 @@
+{"version":3,"file":"init.js","sourceRoot":"","sources":["../src/init.ts"],"names":[],"mappings":";;;AAAA,yDAAyD;AACzD;;;;;;;;;;GAUG;AACH,6CAA0C;AA+BnC,MAAM,iBAAiB,GAAG,KAAK,EAAC,MAAe,EAAE,EAAE;IACxD,MAAM,eAAe,GAAG,IAAI,iBAAO,CAAC,MAAM,CAAC,CAAC;IAE5C,MAAM,eAAe,CAAC,WAAW,EAAE,CAAC;IACpC,MAAM,eAAe,CAAC,eAAe,EAAE,CAAC;IAExC,OAAO,eAAe,CAAC;AACzB,CAAC,CAAC;AAPW,QAAA,iBAAiB,qBAO5B"}
