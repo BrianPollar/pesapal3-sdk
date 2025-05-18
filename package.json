@@ -1,6 +1,6 @@
 {
   "name": "pesapal3-sdk",
-  "version": "1.0.2",
+  "version": "1.0.5",
   "description": "pesapal api version 3 node library",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
