@@ -30,3 +30,6 @@ else
 fi
 
 echo "Release v$NEW_VERSION created and pushed!"
+
+#usage
+# ./release.sh 0.0.1

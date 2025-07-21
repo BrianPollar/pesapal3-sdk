@@ -2,6 +2,8 @@
 import { faker } from '@faker-js/faker';
 import axios from 'axios';
 import * as fs from 'fs';
+
+import * as path from 'path';
 import * as tracer from 'tracer';
 import { Iconfig } from '../init';
 import {
@@ -19,7 +21,7 @@ export const logger = tracer.colorConsole({
   transport(data) {
     // eslint-disable-next-line no-console
     console.log(data.output);
-    const logDir = './serverLog/';
+    const logDir = path.join(process.cwd() + '/logs/');
 
     fs.mkdir(logDir, { recursive: true }, (err) => {
       if (err) {
@@ -28,7 +30,7 @@ export const logger = tracer.colorConsole({
         }
       }
     });
-    fs.appendFile('./serverLog/pesapal.log', data.rawoutput + '\n', err => {
+    fs.appendFile(logDir + '/pesapal.log', data.rawoutput + '\n', err => {
       if (err) {
         throw err;
       }
