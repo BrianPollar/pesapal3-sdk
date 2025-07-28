@@ -17,7 +17,6 @@ The project relies on several important packages:
 - **For Production**:
   - `axios`: Used to send HTTP requests.
   - `axios-mock-adapter`: Helps in testing by mocking requests.
-  - `log4js`: Used for logging messages.
   - `tracer`: Assists with debugging.
 - **For Development**:
   - ESLint plugins for maintaining code quality.

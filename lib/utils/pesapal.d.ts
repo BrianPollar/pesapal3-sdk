@@ -2,42 +2,6 @@ import * as tracer from 'tracer';
 import { Iconfig } from '../init';
 import { IgetIpnEndPointsRes, IgetTokenRes, IgetTransactionStatusRes, IipnResponse, IpayDetails, IpesaPalToken, IrefundRequestReq, IrefundRequestResComplete, IregisterIpnRes, IsubmitOrderRes, TnotificationMethodType } from '../types/core-types';
 export declare const logger: tracer.Tracer.Logger<string>;
-/**
- * This function creates a mock pay details object.
- * The `ipnUrl` property is the IPN URL.
- * The `phone` property is the phone number of the payer.
- *
- * The function returns an object with the following properties:
- * * `id`: The ID of the pay details.
- * * `currency`: The currency of the pay details.
- * * `amount`: The amount of the pay details.
- * * `description`: The description of the pay details.
- * * `callback_url`: The callback URL of the pay details.
- * * `notification_id`: The notification ID of the pay details.
- * * `billing_address`: The billing address of the payer.
- */
-export declare const createMockPayDetails: (ipnUrl: string, phone: string) => {
-    id: string;
-    currency: string;
-    amount: number;
-    description: string;
-    callback_url: string;
-    notification_id: string;
-    billing_address: {
-        email_address: string;
-        phone_number: string;
-        country_code: string;
-        first_name: string;
-        middle_name: string;
-        last_name: string;
-        line_1: string;
-        line_2: string;
-        city: string;
-        state: string;
-        postal_code: string;
-        zip_code: string;
-    };
-};
 export declare const stringifyIfObj: <T>(val: T) => string;
 /**
  * This class is a controller for PesaPal payments.

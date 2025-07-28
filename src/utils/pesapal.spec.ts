@@ -8,10 +8,10 @@ import MockAdapter from 'axios-mock-adapter';
 import { beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { Iconfig } from '../init';
 import {
-    IpayDetails,
-    IpesaPalError,
-    IpesaPalToken,
-    IrefundRequestReq
+  IpayDetails,
+  IpesaPalError,
+  IpesaPalToken,
+  IrefundRequestReq
 } from '../types/core-types';
 import { createMockPayDetails, Pesapal, stringifyIfObj } from './pesapal';
 

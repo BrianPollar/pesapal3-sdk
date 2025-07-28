@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { faker } from '@faker-js/faker';
 import axios from 'axios';
 import * as fs from 'fs';
 
@@ -35,43 +34,6 @@ export const logger = tracer.colorConsole({
         throw err;
       }
     });
-  }
-});
-
-/**
- * This function creates a mock pay details object.
- * The `ipnUrl` property is the IPN URL.
- * The `phone` property is the phone number of the payer.
- *
- * The function returns an object with the following properties:
- * * `id`: The ID of the pay details.
- * * `currency`: The currency of the pay details.
- * * `amount`: The amount of the pay details.
- * * `description`: The description of the pay details.
- * * `callback_url`: The callback URL of the pay details.
- * * `notification_id`: The notification ID of the pay details.
- * * `billing_address`: The billing address of the payer.
- */
-export const createMockPayDetails = (ipnUrl: string, phone: string) => ({
-  id: faker.string.uuid(),
-  currency: 'UGX',
-  amount: 1000,
-  description: faker.string.alphanumeric(),
-  callback_url: 'http://localhost:4000',
-  notification_id: ipnUrl,
-  billing_address: {
-    email_address: faker.internet.email(),
-    phone_number: phone,
-    country_code: 'UGA',
-    first_name: faker.internet.userName(),
-    middle_name: faker.internet.userName(),
-    last_name: faker.internet.userName(),
-    line_1: faker.string.alphanumeric(),
-    line_2: faker.string.alphanumeric(),
-    city: 'Kampala',
-    state: 'Uganda',
-    postal_code: '0000',
-    zip_code: '0000'
   }
 });
 
