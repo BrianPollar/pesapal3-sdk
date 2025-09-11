@@ -221,6 +221,21 @@ export class Pesapal {
       throw new Error('Description is required');
     }
 
+    // check if subscription details are provided if account number is provided
+    if (paymentDetails.account_number && !paymentDetails.subscription_details) {
+      throw new Error('Subscription details are required');
+    }
+
+    // check echa val in subscription details if provided
+    if (paymentDetails.subscription_details) {
+      if (!paymentDetails.subscription_details.start_date ||
+            !paymentDetails.subscription_details.end_date ||
+            !paymentDetails.subscription_details.frequency) {
+        throw new Error('Subscription details are required');
+      }
+    }
+
+
     // Sanitized logging
     logger.info('Submitting order', {
       transactionType: 'order_submission'

@@ -99,11 +99,11 @@ export interface IpayDetails {
     zip_code: string;
   };
   // subscription details for recurring payments
-  account_number: string;
-  subscription_details: {
+  account_number?: string;
+  subscription_details?: {
     start_date: string;
     end_date: string;
-    frequency: string;
+    frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
   };
 }
 
