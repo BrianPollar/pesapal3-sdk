@@ -98,6 +98,13 @@ export interface IpayDetails {
     postal_code: string;
     zip_code: string;
   };
+  // subscription details for recurring payments
+  account_number: string;
+  subscription_details: {
+    start_date: string;
+    end_date: string;
+    frequency: string;
+  };
 }
 
 /**
