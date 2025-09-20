@@ -6,7 +6,7 @@ import * as path from 'path';
 import * as tracer from 'tracer';
 import { Iconfig } from '../init';
 import {
-  IendpointResponse, IgetIpnEndPointsRes, IgetTokenRes,
+  IgetIpnEndPointsRes, IgetTokenRes,
   IgetTransactionStatusRes, IipnResponse, IorderResponse, IpayDetails,
   IpesaPalError, IpesaPalToken, IrefundRequestReq, IrefundRequestRes,
   IrefundRequestResComplete, IregisterIpnRes, IrelegateTokenStatusRes,
@@ -345,15 +345,15 @@ export class Pesapal {
         `?orderTrackingId=${orderTrackingId}`,
           { headers }
         ).then(res => {
-          const response = res.data as IendpointResponse;
+          const response = res.data as IgetTransactionStatusRes;
 
           if (response.error) {
             reject(new Error(response.error.message + ' on ' + response.error.call_back_url));
           } else if (response.payment_status_description.toLowerCase() === 'completed') {
-            resolve({ success: true, response });
+            resolve(response);
           } else {
             reject(new Error('Getting Transaction Status Failed With ' + response.payment_status_description));
-            resolve({ success: false, status: response.payment_status_description });
+            // resolve(response);
           }
         }).catch((err) => {
           logger.error('PesaPalController, getToken err', err);

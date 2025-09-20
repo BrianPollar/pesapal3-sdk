@@ -113,7 +113,7 @@ export interface IorderResponse {
     status: string;
 }
 /**
- * This is an interface that defines an IendpointResponse.
+ * This is an interface that defines an IgetTransactionStatusRes.
  *
  * The `payment_method` property is the payment method used.
  * The `amount` property is the amount of the payment.
@@ -131,7 +131,7 @@ export interface IorderResponse {
  * The `error` property is the error, or `null` if there is no error.
  * The `status` property is the status of the payment.
  */
-export interface IendpointResponse {
+export interface IgetTransactionStatusRes {
     payment_method: string;
     amount: number;
     created_date: string;
@@ -229,20 +229,6 @@ export interface IsubmitOrderRes {
     success: boolean;
     status?: number;
     pesaPalOrderRes?: IorderResponse;
-    err?: any;
-}
-/**
- * This is an interface that defines an IgetTransactionStatusRes.
- *
- * The `success` property indicates whether the request was successful.
- * The `response` property is the response from PesaPal.
- * The `status` property is the status of the transaction.
- * The `err` property is the error, if any.
- */
-export interface IgetTransactionStatusRes {
-    success: boolean;
-    response?: IendpointResponse;
-    status?: string;
     err?: any;
 }
 /**
