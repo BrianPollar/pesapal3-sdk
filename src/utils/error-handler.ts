@@ -9,3 +9,11 @@ export class PesaPalError extends Error {
     this.name = 'PesaPalError';
   }
 }
+
+
+export class PesaPalInvalidConfigError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'PesaPalInvalidConfigError';
+  }
+}

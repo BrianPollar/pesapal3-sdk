@@ -4,3 +4,6 @@ export declare class PesaPalError extends Error {
     type: string;
     constructor(err: IpesaPalError);
 }
+export declare class PesaPalInvalidConfigError extends Error {
+    constructor(message: string);
+}

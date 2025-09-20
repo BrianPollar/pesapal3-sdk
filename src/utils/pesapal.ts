@@ -104,7 +104,7 @@ export class Pesapal {
       return new Promise((resolve, reject) => reject(new Error('couldnt resolve getting token')));
     }
 
-    const ipnUrl = ipn || this.config.PESAPAL_IPN_URL;
+    const ipnUrl = ipn;
     const ipnNotificationType = notificationMethodType || 'GET';
 
     const parameters = {

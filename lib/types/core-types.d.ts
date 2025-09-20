@@ -89,6 +89,12 @@ export interface IpayDetails {
         postal_code: string;
         zip_code: string;
     };
+    account_number?: string;
+    subscription_details?: {
+        start_date: string;
+        end_date: string;
+        frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
+    };
 }
 /**
  * This is an interface that defines an IorderResponse.

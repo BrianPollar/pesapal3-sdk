@@ -10,6 +10,7 @@
  * by registering the IPN endpoint and retrieving the IPN endpoints.
  * It returns the instance of the `PesaPalController` class, which can be used to interact with the PesaPal API.
  */
+import { PesaPalInvalidConfigError } from './utils/error-handler';
 import { Pesapal } from './utils/pesapal';
 
 /**
@@ -37,14 +38,49 @@ export interface Iconfig {
   /**
    * The IPN URL for PesaPal.
    */
-  PESAPAL_IPN_URL: string;
+  PESAPAL_IPN_URLS: string[];
 }
 
 
 export const initialisePesapal = async(config: Iconfig) => {
+  // validate config
+  if (!config.PESAPAL_ENVIRONMENT ||
+    !config.PESAPAL_CONSUMER_KEY ||
+    !config.PESAPAL_CONSUMER_SECRET ||
+    !config.PESAPAL_IPN_URLS) {
+    throw new PesaPalInvalidConfigError('Invalid configuration');
+  }
+
+  if (!Array.isArray(config.PESAPAL_IPN_URLS)) {
+    throw new PesaPalInvalidConfigError('Invalid IPN URLS');
+  }
+
+  if (config.PESAPAL_IPN_URLS.length === 0) {
+    throw new PesaPalInvalidConfigError('Invalid IPN URLS');
+  }
+
+  // must have valid urls
+  config.PESAPAL_IPN_URLS.forEach((url) => {
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      throw new PesaPalInvalidConfigError('Invalid IPN URLS');
+    }
+
+    // regex to validate url
+    const urlRegex = /^(http|https):\/\/(www\.)?[a-z0-9\-\.]{3,}\.[a-z]{3}\b([a-z\-\.]*\/)*$/;
+
+    if (!urlRegex.test(url)) {
+      throw new PesaPalInvalidConfigError('Invalid IPN URLS');
+    }
+  });
+
   const paymentInstance = new Pesapal(config);
 
-  await paymentInstance.registerIpn();
+  const promises = config.PESAPAL_IPN_URLS.map((url) => {
+    return paymentInstance.registerIpn(url);
+  });
+
+  await Promise.all(promises);
+
   await paymentInstance.getIpnEndPoints();
 
   return paymentInstance;
