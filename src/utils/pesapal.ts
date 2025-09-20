@@ -249,7 +249,19 @@ export class Pesapal {
       if (!this.ipns || this.ipns.length === 0) {
         throw new Error('No IPN endpoints available');
       }
-      const notifId = this.ipns[0].ipn_id;
+
+      // if not notification_id is provided, error
+      if (!paymentDetails.notification_id) {
+        throw new Error('Notification ID is required');
+      }
+
+
+      // check notification_id against current ipn_id if no exist error
+      const ipnUrls = this.ipns.map(ipn => ipn.url);
+
+      if (!ipnUrls.includes(paymentDetails.notification_id)) {
+        throw new Error('Notification ID does not match');
+      }
 
       // Prepare headers with trimmed Bearer token
       const headers = {
@@ -260,7 +272,7 @@ export class Pesapal {
       // Make API call
       const response = await axios.post(
         `${this.pesapalUrl}/api/Transactions/SubmitOrderRequest`,
-        this.constructParamsFromObj(paymentDetails, notifId, productId, description),
+        this.constructParamsFromObj(paymentDetails, productId, description),
         { headers }
       );
 
@@ -533,7 +545,6 @@ export class Pesapal {
  */
   private constructParamsFromObj(
     paymentDetails: IpayDetails,
-    notificationId: string,
     id: string,
     description: string,
     countryCode = 'UG',
@@ -545,7 +556,7 @@ export class Pesapal {
       amount: paymentDetails.amount,
       description,
       callback_url: paymentDetails.callback_url,
-      notification_id: notificationId,
+      notification_id: paymentDetails.notification_id,
       billing_address: {
         email_address: paymentDetails.billing_address?.email_address,
         phone_number: paymentDetails.billing_address?.phone_number,
