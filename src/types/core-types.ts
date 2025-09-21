@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+
 /**
- * This is an interface that defines an IpesaPalError.
- *
- * The `type` property indicates the type of error.
- * The `code` property indicates the code of the error.
- * The `message` property indicates the message of the error.
+ * Represents an error object returned by the PesaPal API
+ * @interface IpesaPalError
+ * @property {string} type - The type/category of the error
+ * @property {string} code - A unique error code identifying the specific error
+ * @property {string} message - Human-readable error message describing the issue
  */
 export interface IpesaPalError {
   type: string;
@@ -13,13 +14,13 @@ export interface IpesaPalError {
 }
 
 /**
- * This is an interface that defines an IpesaPalToken.
- *
- * The `token` property is the token itself.
- * The `expiryDate` property is the expiry date of the token.
- * The `error` property is the error, or `null` if there is no error.
- * The `status` property is the status of the token.
- * The `message` property is the message of the token.
+ * Represents an authentication token response from PesaPal
+ * @interface IpesaPalToken
+ * @property {string | null} token - The authentication token, or null if authentication failed
+ * @property {string} expiryDate - ISO 8601 timestamp when the token expires
+ * @property {string | IpesaPalError} error - Error details if authentication failed, or error message as string
+ * @property {string} status - The status of the token request (e.g., '200' for success)
+ * @property {string} message - Human-readable status message
  */
 export interface IpesaPalToken {
   token: string | null;
@@ -30,12 +31,13 @@ export interface IpesaPalToken {
 }
 
 /**
- * This is an interface that defines an IipnResponse.
- * The `url` property is the URL of the IPN.
- * The `created_date` property is the date the IPN was created.
- * The `ipn_id` property is the ID of the IPN.
- * The `error` property is the error, or `null` if there is no error.
- * The `status` property is the status of the IPN.
+ * Represents a response for IPN (Instant Payment Notification) registration
+ * @interface IipnResponse
+ * @property {string} url - The registered IPN URL
+ * @property {string} created_date - ISO 8601 timestamp when the IPN was created
+ * @property {string} ipn_id - Unique identifier for the registered IPN
+ * @property {string | IpesaPalError} error - Error details if registration failed
+ * @property {string} status - The status of the IPN registration
  */
 export interface IipnResponse {
   url: string;
@@ -48,13 +50,13 @@ export interface IipnResponse {
 }
 
 /**
- * This is an interface that defines an IregisteredIpin.
- *
- * The `url` property is the URL of the registered IPIN.
- * The `created_date` property is the date the IPIN was created.
- * The `ipn_id` property is the ID of the IPIN.
- * The `error` property is the error, or `null` if there is no error.
- * The `status` property is the status of the IPIN.
+ * Represents a registered IPIN (Instant Payment Identification Number)
+ * @interface IregisteredIpin
+ * @property {string} url - The URL associated with the registered IPIN
+ * @property {string} created_date - ISO 8601 timestamp when the IPIN was created
+ * @property {string} ipn_id - Unique identifier for the IPIN
+ * @property {string | IpesaPalError} error - Error details if registration failed
+ * @property {string} status - The status of the IPIN registration
  */
 export interface IregisteredIpin {
   url: string;
@@ -67,15 +69,61 @@ export interface IregisteredIpin {
 }
 
 /**
- * This is an interface that defines an IpayDetails.
- *
- * The `id` property is the ID of the payment details.
- * The `currency` property is the currency of the payment.
- * The `amount` property is the amount of the payment.
- * The `description` property is the description of the payment.
- * The `callback_url` property is the URL to call back when the payment is processed.
- * The `notification_id` property is the ID of the notification.
- * The `billing_address` property is the billing address of the payer.
+ * Represents billing address information for a payment
+ * @interface IBillingAddress
+ * @property {string} email_address - Customer's email address
+ * @property {string} phone_number - Customer's phone number
+ * @property {string} country_code - ISO country code (e.g., 'KE' for Kenya)
+ * @property {string} first_name - Customer's first name
+ * @property {string} middle_name - Customer's middle name (optional)
+ * @property {string} last_name - Customer's last name
+ * @property {string} line_1 - First line of the address
+ * @property {string} line_2 - Second line of the address (optional)
+ * @property {string} city - City name
+ * @property {string} state - State/province/region
+ * @property {string} postal_code - Postal/ZIP code
+ * @property {string} zip_code - Alternative to postal code (some regions)
+ */
+interface IBillingAddress {
+  email_address: string;
+  phone_number: string;
+  country_code: string;
+  first_name: string;
+  middle_name: string;
+  last_name: string;
+  line_1: string;
+  line_2: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  zip_code: string;
+}
+
+/**
+ * Represents subscription details for recurring payments
+ * @interface ISubscriptionDetails
+ * @property {string} start_date - ISO 8601 date when the subscription starts
+ * @property {string} end_date - ISO 8601 date when the subscription ends
+ * @property {'DAILY'|'WEEKLY'|'MONTHLY'|'YEARLY'} frequency - Billing frequency
+ */
+interface ISubscriptionDetails {
+  start_date: string;
+  end_date: string;
+  frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
+}
+
+/**
+ * Represents payment details for a transaction
+ * @interface IpayDetails
+ * @property {string} id - Unique identifier for the payment
+ * @property {string} currency - ISO 4217 currency code (e.g., 'KES', 'USD')
+ * @property {number} amount - Payment amount in the specified currency
+ * @property {string} description - Description of the payment
+ * @property {string} callback_url - URL to redirect after payment completion
+ * @property {string} notification_id - Unique ID for payment notifications
+ * @property {IBillingAddress} billing_address - Customer's billing information
+ * @property {string} [account_number] - Account number for recurring payments (optional)
+ * @property {ISubscriptionDetails} [subscription_details] - Recurring payment details (optional)
  */
 export interface IpayDetails {
   id: string;
@@ -84,37 +132,19 @@ export interface IpayDetails {
   description: string;
   callback_url: string;
   notification_id: string;
-  billing_address: {
-    email_address: string;
-    phone_number: string;
-    country_code: string;
-    first_name: string;
-    middle_name: string;
-    last_name: string;
-    line_1: string;
-    line_2: string;
-    city: string;
-    state: string;
-    postal_code: string;
-    zip_code: string;
-  };
-  // subscription details for recurring payments
+  billing_address: IBillingAddress;
   account_number?: string;
-  subscription_details?: {
-    start_date: string;
-    end_date: string;
-    frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
-  };
+  subscription_details?: ISubscriptionDetails;
 }
 
 /**
- * This is an interface that defines an IorderResponse.
- *
- * The `order_tracking_id` property is the ID of the order.
- * The `merchant_reference` property is the merchant reference.
- * The `redirect_url` property is the URL to redirect the payer to.
- * The `error` property is the error, or `null` if there is no error.
- * The `status` property is the status of the order.
+ * Represents the response when creating an order
+ * @interface IorderResponse
+ * @property {string} order_tracking_id - Unique identifier for tracking the order
+ * @property {string} merchant_reference - Merchant's reference for the order
+ * @property {string} redirect_url - URL to redirect the customer for payment
+ * @property {string | IpesaPalError} error - Error details if order creation failed
+ * @property {string} status - Status of the order creation request
  */
 export interface IorderResponse {
   order_tracking_id: string;
@@ -125,23 +155,24 @@ export interface IorderResponse {
 }
 
 /**
- * This is an interface that defines an IgetTransactionStatusRes.
- *
- * The `payment_method` property is the payment method used.
- * The `amount` property is the amount of the payment.
- * The `created_date` property is the date the payment was created.
- * The `confirmation_code` property is the confirmation code of the payment.
- * The `payment_status_description` property is the description of the payment status.
- * The `description` property is the description of the payment.
- * The `message` property is the message of the payment.
- * The `payment_account` property is the payment account used.
- * The `call_back_url` property is the URL to call back when the payment is processed.
- * The `status_code` property is the status code of the payment.
- * The `merchant_reference` property is the merchant reference.
- * The `payment_status_code` property is the payment status code.
- * The `currency` property is the currency of the payment.
- * The `error` property is the error, or `null` if there is no error.
- * The `status` property is the status of the payment.
+ * Represents a response for getting transaction status
+ * @interface IgetTransactionStatusRes
+ * @property {string} payment_method - Payment method used for the transaction
+ * @property {number} amount - Transaction amount
+ * @property {string} created_date - ISO 8601 timestamp when the transaction was created
+ * @property {string} confirmation_code - Confirmation code for the transaction
+ * @property {string} payment_status_description - Description of the transaction status
+ * @property {string} description - Description of the transaction
+ * @property {string} message - Human-readable status message
+ * @property {string} payment_account - Payment account used for the transaction
+ * @property {string} call_back_url - URL to call back when the transaction is processed
+ * @property {number} status_code - Status code of the transaction
+ * @property {string} merchant_reference - Merchant's reference for the transaction
+ * @property {string} payment_status_code - Payment status code
+ * @property {string} currency - ISO 4217 currency code (e.g., 'KES', 'USD')
+ * @property {{ error_type: null; code: null; message: null;
+ * call_back_url: null; }} error - Error details if transaction retrieval failed
+ * @property {string} status - Status of the transaction retrieval request
  */
 export interface IgetTransactionStatusRes {
   payment_method: string;
@@ -164,11 +195,14 @@ export interface IgetTransactionStatusRes {
     call_back_url: null;
   };
   status: string;
-
 }
 
 /**
  * Interface representing the response of a refund request completion.
+ * @interface IrefundRequestResComplete
+ * @property {boolean} success - Whether the refund request was successful
+ * @property {string} [err] - Error message if the refund request failed
+ * @property {IrefundRequestRes} [refundRequestRes] - Refund request response if successful
  */
 export interface IrefundRequestResComplete {
   success: boolean;
@@ -178,6 +212,11 @@ export interface IrefundRequestResComplete {
 
 /**
  * Interface representing a refund request.
+ * @interface IrefundRequestReq
+ * @property {string} confirmation_code - Confirmation code for the refund request
+ * @property {string} amount - Refund amount
+ * @property {string} username - Username for the refund request
+ * @property {string} remarks - Remarks for the refund request
  */
 export interface IrefundRequestReq {
   confirmation_code: string;
@@ -188,6 +227,9 @@ export interface IrefundRequestReq {
 
 /**
  * Interface representing the response of a refund request.
+ * @interface IrefundRequestRes
+ * @property {string} status - Status of the refund request
+ * @property {string} message - Human-readable status message
  */
 export interface IrefundRequestRes {
   status: string;
@@ -195,10 +237,10 @@ export interface IrefundRequestRes {
 }
 
 /**
- * This is an interface that defines an IgetTokenRes.
- *
- * The `success` property indicates whether the request was successful.
- * The `err` property is the error, if any.
+ * Interface representing the response of a token request.
+ * @interface IgetTokenRes
+ * @property {boolean} success - Whether the token request was successful
+ * @property {*} [err] - Error details if the token request failed
  */
 export interface IgetTokenRes {
   success: boolean;
@@ -206,10 +248,10 @@ export interface IgetTokenRes {
 }
 
 /**
- * This is an interface that defines an IregisterIpnRes.
- *
- * The `success` property indicates whether the request was successful.
- * The `err` property is the error, if any.
+ * Interface representing the response of an IPN registration request.
+ * @interface IregisterIpnRes
+ * @property {boolean} success - Whether the IPN registration request was successful
+ * @property {*} [err] - Error details if the IPN registration request failed
  */
 export interface IregisterIpnRes {
   success: boolean;
@@ -217,10 +259,10 @@ export interface IregisterIpnRes {
 }
 
 /**
- * This is an interface that defines an IrelegateTokenStatusRes.
- *
- * The `success` property indicates whether the request was successful.
- * The `madeNewToken` property indicates whether a new token was created.
+ * Interface representing the response of a token status request.
+ * @interface IrelegateTokenStatusRes
+ * @property {boolean} success - Whether the token status request was successful
+ * @property {boolean} madeNewToken - Whether a new token was created
  */
 export interface IrelegateTokenStatusRes {
   success: boolean;
@@ -228,10 +270,10 @@ export interface IrelegateTokenStatusRes {
 }
 
 /**
- * This is an interface that defines an IgetIpnEndPointsRes.
- *
- * The `success` property indicates whether the request was successful.
- * The `err` property is the error, if any.
+ * Interface representing the response of an IPN endpoints request.
+ * @interface IgetIpnEndPointsRes
+ * @property {boolean} success - Whether the IPN endpoints request was successful
+ * @property {*} [err] - Error details if the IPN endpoints request failed
  */
 export interface IgetIpnEndPointsRes {
   success: boolean;
@@ -239,12 +281,12 @@ export interface IgetIpnEndPointsRes {
 }
 
 /**
- * This is an interface that defines an IsubmitOrderRes.
- *
- * The `success` property indicates whether the request was successful.
- * The `status` property is the status of the order.
- * The `pesaPalOrderRes` property is the PesaPal order response.
- * The `err` property is the error, if any.
+ * Interface representing the response of an order submission request.
+ * @interface IsubmitOrderRes
+ * @property {boolean} success - Whether the order submission request was successful
+ * @property {number} [status] - Status code of the order submission request
+ * @property {IorderResponse} [pesaPalOrderRes] - PesaPal order response if successful
+ * @property {*} [err] - Error details if the order submission request failed
  */
 export interface IsubmitOrderRes {
   success: boolean;
@@ -255,5 +297,6 @@ export interface IsubmitOrderRes {
 
 /**
  * Defines the type of notification method, either 'GET' or 'POST'.
+ * @typedef {'GET'|'POST'} TnotificationMethodType
  */
 export type TnotificationMethodType = 'GET' | 'POST';
