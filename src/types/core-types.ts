@@ -131,7 +131,8 @@ export interface IpayDetails {
   amount: number;
   description: string;
   callback_url: string;
-  notification_id: string;
+  notification_id?: string;
+  notification_ipn_url?: string;
   billing_address: IBillingAddress;
   account_number?: string;
   subscription_details?: ISubscriptionDetails;

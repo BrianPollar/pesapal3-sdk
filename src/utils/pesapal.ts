@@ -1,19 +1,29 @@
+/**
+ * @file PesaPal SDK for TypeScript
+ * @description A comprehensive SDK for integrating with PesaPal payment gateway
+ * @module pesapal
+ */
+
 /* eslint-disable @typescript-eslint/naming-convention */
 import axios from 'axios';
 import * as fs from 'fs';
-
 import * as path from 'path';
 import * as tracer from 'tracer';
 import { Iconfig } from '../init';
 import {
   IgetIpnEndPointsRes, IgetTokenRes,
   IgetTransactionStatusRes, IipnResponse, IorderResponse, IpayDetails,
-  IpesaPalError, IpesaPalToken, IrefundRequestReq, IrefundRequestRes,
+  IpesaPalError,
+  IpesaPalToken, IrefundRequestReq, IrefundRequestRes,
   IrefundRequestResComplete, IregisterIpnRes, IrelegateTokenStatusRes,
   IsubmitOrderRes, TnotificationMethodType
 } from '../types/core-types';
 import { PesaPalError } from './error-handler';
 
+/**
+ * Logger instance for the PesaPal SDK
+ * @type {tracer.Tracer.Logger}
+ */
 export const logger = tracer.colorConsole({
   format: '{{timestamp}} [{{title}}] {{message}} (in {{file}}:{{line}})',
   dateformat: 'HH:MM:ss.L',
@@ -37,31 +47,62 @@ export const logger = tracer.colorConsole({
   }
 });
 
+/**
+ * Converts a value to string, handling objects by JSON stringification
+ * @template T - The type of the input value
+ * @param {T} val - The value to stringify
+ * @returns {string} The stringified value
+ */
 export const stringifyIfObj = <T>(val: T): string =>
   (typeof val === 'string' ? val : JSON.stringify(val));
 
 /**
- * This class is a controller for PesaPal payments.
- * The `token` property is the PesaPal token.
- * The `ipns` property is an array of IIPnResponse objects.
- * The `defaultHeaders` property is an object with the default headers for the requests.
- * The `callbackUrl` property is the main callback URL.
- * The `notificationId` property is the notification ID.
+ * Main class for interacting with the PesaPal API
+ * @class Pesapal
+ * @description Provides methods to interact with PesaPal payment gateway
  */
 export class Pesapal {
-  // callbackUrl: string; // main callback url
+  /**
+   * The notification ID for IPN (Instant Payment Notification)
+   * @type {string}
+   */
   notificationId: string;
+
+  /**
+   * Default headers for HTTP requests
+   * @type {Object}
+   * @property {string} Accept - Accept header
+   * @property {string} Content-Type - Content type header
+   */
   defaultHeaders = {
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     Accept: 'application/json',
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     'Content-Type': 'application/json'
   };
 
+  /**
+   * Array of registered IPN (Instant Payment Notification) endpoints
+   * @type {IipnResponse[]}
+   */
   ipns: IipnResponse[] = [];
+
+  /**
+   * Base URL for PesaPal API
+   * @type {string}
+   */
   pesapalUrl: string;
+
+  /**
+   * Authentication token for PesaPal API
+   * @type {IpesaPalToken}
+   */
   token: IpesaPalToken;
 
+  /**
+   * Creates a new instance of the Pesapal class
+   * @constructor
+   * @param {Iconfig} config - Configuration object containing PesaPal credentials
+   * @param {string} config.PESAPAL_ENVIRONMENT - Environment type ('live' or 'sandbox')
+   */
   constructor(public config: Iconfig) {
     if (config.PESAPAL_ENVIRONMENT === 'live') {
       this.pesapalUrl = 'https://pay.pesapal.com/v3';
@@ -72,10 +113,11 @@ export class Pesapal {
   }
 
   /**
-   * Intercepts Axios requests and adds the PesaPal token to the Authorization header if it is available.
-   * This ensures that the PesaPal token is included in all outgoing requests.
+   * Intercepts Axios requests to add authorization headers
+   * @private
+   * @returns {void}
    */
-  interceptAxios() {
+  interceptAxios(): void {
     axios.interceptors.request.use((config) => {
       if (!this.tokenExpired()) {
         config.headers.Authorization = 'Bearer ' + this.token?.token;
@@ -88,12 +130,14 @@ export class Pesapal {
   }
 
   /**
- * This method registers the IPN URL with PesaPal.
- * The method returns a promise with the following properties:
- *
- * * `success`: Indicates whether the request was successful.
- */
-  async registerIpn(ipn?: string, notificationMethodType?: TnotificationMethodType): Promise<IregisterIpnRes> {
+   * Registers an IPN (Instant Payment Notification) URL with PesaPal
+   * @async
+   * @param {string} [ipn] - The IPN URL to register
+   * @param {TnotificationMethodType} [notificationMethodType='GET'] - The notification method type
+   * @returns {Promise<IregisterIpnRes>} Promise that resolves when IPN is registered
+   * @throws {Error} If token cannot be obtained or IPN registration fails
+   */
+  async registerIpn(ipn?: string, notificationMethodType: TnotificationMethodType = 'GET'): Promise<IregisterIpnRes> {
     const gotToken = await this.relegateTokenStatus().catch(err => err);
 
     if (gotToken instanceof Error) {
@@ -104,14 +148,10 @@ export class Pesapal {
       return new Promise((resolve, reject) => reject(new Error('couldnt resolve getting token')));
     }
 
-    const ipnUrl = ipn;
-    const ipnNotificationType = notificationMethodType || 'GET';
-
     const parameters = {
-      url: ipnUrl,
-      ipn_notification_type: ipnNotificationType
+      url: ipn,
+      ipn_notification_type: notificationMethodType
     };
-
 
     const headers = {
       ...this.defaultHeaders,
@@ -121,8 +161,7 @@ export class Pesapal {
     return new Promise((resolve, reject) => {
       axios
         .post(
-          this.pesapalUrl +
-        '/api/URLSetup/RegisterIPN',
+          `${this.pesapalUrl}/api/URLSetup/RegisterIPN`,
           parameters,
           { headers }
         )
@@ -136,7 +175,7 @@ export class Pesapal {
               reject(new PesaPalError(response.error));
             }
           } else {
-            this.ipns = [ ...this.ipns, response];
+            this.ipns = [...this.ipns, response];
             resolve({ success: true });
           }
         }).catch((err) => {
@@ -147,11 +186,11 @@ export class Pesapal {
   }
 
   /**
- * This method gets the IPN endpoints from PesaPal.
- * The method returns a promise with the following properties:
- *
- * * `success`: Indicates whether the request was successful.
- */
+   * Retrieves the list of registered IPN endpoints
+   * @async
+   * @returns {Promise<IgetIpnEndPointsRes>} Promise that resolves with the list of IPN endpoints
+   * @throws {Error} If token cannot be obtained or IPN endpoints cannot be retrieved
+   */
   async getIpnEndPoints(): Promise<IgetIpnEndPointsRes> {
     const gotToken = await this.relegateTokenStatus().catch(err => err);
 
@@ -167,8 +206,7 @@ export class Pesapal {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          this.pesapalUrl +
-        '/api/URLSetup/GetIpnList',
+          `${this.pesapalUrl}/api/URLSetup/GetIpnList`,
           { headers }
         )
         .then(res => {
@@ -192,19 +230,15 @@ export class Pesapal {
     });
   }
 
-
   /**
- * This method submits the order to PesaPal.
- * The method takes the following parameters:
- * * `paymentDetails`: The payment details object.
- * * `productId`: The ID of the product.
- * * `description`: The description of the payment.
- *
- * The method returns a promise with the following properties:
- * * `success`: Indicates whether the request was successful.
- * * `status`: The status of the order.
- * * `pesaPalOrderRes`: The PesaPal order response.
- */
+   * Submits an order to PesaPal
+   * @async
+   * @param {IpayDetails} paymentDetails - The payment details
+   * @param {string} productId - The product ID
+   * @param {string} description - The order description
+   * @returns {Promise<IsubmitOrderRes>} Promise that resolves with the order submission result
+   * @throws {Error} If input validation fails or order submission fails
+   */
   async submitOrder(
     paymentDetails: IpayDetails,
     productId: string,
@@ -226,7 +260,7 @@ export class Pesapal {
       throw new Error('Subscription details are required');
     }
 
-    // check echa val in subscription details if provided
+    // check each val in subscription details if provided
     if (paymentDetails.subscription_details) {
       if (!paymentDetails.subscription_details.start_date ||
             !paymentDetails.subscription_details.end_date ||
@@ -234,7 +268,6 @@ export class Pesapal {
         throw new Error('Subscription details are required');
       }
     }
-
 
     // Sanitized logging
     logger.info('Submitting order', {
@@ -250,18 +283,21 @@ export class Pesapal {
         throw new Error('No IPN endpoints available');
       }
 
-      // if not notification_id is provided, error
       if (!paymentDetails.notification_id) {
-        throw new Error('Notification ID is required');
+        // if no notification_ipn_url is provided, error
+        if (!paymentDetails.notification_ipn_url) {
+          throw new Error('Notification IPN URL is required');
+        }
+        // check notification_id against current ipn_id if no exist error
+        const ipnUrls = this.ipns.map(ipn => ipn.url);
+
+        if (!ipnUrls.includes(paymentDetails.notification_ipn_url)) {
+          throw new Error('Notification IPN URL does not match');
+        }
+
+        paymentDetails.notification_id = this.ipns.find(ipn => ipn.url === paymentDetails.notification_ipn_url)?.ipn_id;
       }
 
-
-      // check notification_id against current ipn_id if no exist error
-      const ipnUrls = this.ipns.map(ipn => ipn.url);
-
-      if (!ipnUrls.includes(paymentDetails.notification_id)) {
-        throw new Error('Notification ID does not match');
-      }
 
       // Prepare headers with trimmed Bearer token
       const headers = {
@@ -317,14 +353,12 @@ export class Pesapal {
   }
 
   /**
- * This method gets the transaction status from PesaPal.
- * The method takes the following parameters:
- * * `orderTrackingId`: The order tracking ID.
- *
- * The method returns a promise with the following properties:
- * * `success`: Indicates whether the request was successful.
- * * `response`: The response from PesaPal.
- */
+   * Gets the status of a transaction
+   * @async
+   * @param {string} orderTrackingId - The order tracking ID
+   * @returns {Promise<IgetTransactionStatusRes>} Promise that resolves with the transaction status
+   * @throws {Error} If token cannot be obtained or transaction status cannot be retrieved
+   */
   async getTransactionStatus(orderTrackingId: string): Promise<IgetTransactionStatusRes> {
     const gotToken = await this.relegateTokenStatus().catch(err => err);
 
@@ -340,20 +374,17 @@ export class Pesapal {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          this.pesapalUrl +
-        '/api/Transactions/GetTransactionStatus' +
-        `?orderTrackingId=${orderTrackingId}`,
+          `${this.pesapalUrl}/api/Transactions/GetTransactionStatus?orderTrackingId=${orderTrackingId}`,
           { headers }
         ).then(res => {
           const response = res.data as IgetTransactionStatusRes;
 
           if (response.error) {
-            reject(new Error(response.error.message + ' on ' + response.error.call_back_url));
+            reject(new Error(`${response.error.message} on ${response.error.call_back_url}`));
           } else if (response.payment_status_description.toLowerCase() === 'completed') {
             resolve(response);
           } else {
-            reject(new Error('Getting Transaction Status Failed With ' + response.payment_status_description));
-            // resolve(response);
+            reject(new Error(`Getting Transaction Status Failed With ${response.payment_status_description}`));
           }
         }).catch((err) => {
           logger.error('PesaPalController, getToken err', err);
@@ -362,11 +393,12 @@ export class Pesapal {
     });
   }
 
-
   /**
-   * Sends a refund request for a transaction.
-   * @param refunReqObj - The refund request object.
-   * @returns A promise that resolves to the refund request response.
+   * Submits a refund request for a transaction
+   * @async
+   * @param {IrefundRequestReq} refunReqObj - The refund request object
+   * @returns {Promise<IrefundRequestResComplete>} Promise that resolves with the refund request result
+   * @throws {Error} If token cannot be obtained or refund request fails
    */
   async refundRequest(refunReqObj: IrefundRequestReq): Promise<IrefundRequestResComplete> {
     const gotToken = await this.relegateTokenStatus().catch(err => err);
@@ -383,8 +415,7 @@ export class Pesapal {
     return new Promise((resolve, reject) => {
       axios
         .post(
-          this.pesapalUrl +
-        '/api/Transactions/RefundRequestt',
+          `${this.pesapalUrl}/api/Transactions/RefundRequestt`,
           refunReqObj,
           { headers }
         )
@@ -392,7 +423,7 @@ export class Pesapal {
           const response = res.data as IrefundRequestRes;
 
           if (!response) {
-            reject(new Error('Refund Unsuccesful'));
+            reject(new Error('Refund Unsuccessful'));
           } else {
             resolve({ success: true, refundRequestRes: response });
           }
@@ -404,12 +435,11 @@ export class Pesapal {
   }
 
   /**
- * This method gets the PesaPal token.
- * The method returns a promise with the following properties:
- *
- * * `success`: Indicates whether the request was successful.
- * * `err`: The error, if any.
- */
+   * Gets the PesaPal token
+   * @async
+   * @returns {Promise<IgetTokenRes>} Promise that resolves with the token
+   * @throws {Error} If token cannot be obtained
+   */
   getToken(): Promise<IgetTokenRes> {
     const headers = {
       ...this.defaultHeaders
@@ -422,8 +452,7 @@ export class Pesapal {
     return new Promise((resolve, reject) => {
       axios
         .post(
-          this.pesapalUrl +
-        '/api/Auth/RequestToken',
+          `${this.pesapalUrl}/api/Auth/RequestToken`,
           parameters,
           { headers }
         )
@@ -459,7 +488,12 @@ export class Pesapal {
     });
   }
 
-  private tokenExpired() {
+  /**
+   * Checks if the token is expired
+   * @private
+   * @returns {boolean} True if the token is expired, false otherwise
+   */
+  private tokenExpired(): boolean {
     if (!this.hasToken()) {
       return true;
     }
@@ -470,13 +504,12 @@ export class Pesapal {
   }
 
   /**
- * This method checks the status of the token and creates a new token if it is expired.
- *
- * The method returns a promise with the following properties:
- *
- * * `success`: Indicates whether the request was successful.
- * * `madeNewToken`: Indicates whether a new token was created.
- */
+   * Checks the status of the token and creates a new token if it is expired
+   * @async
+   * @private
+   * @returns {Promise<IrelegateTokenStatusRes>} Promise that resolves with the token status
+   * @throws {Error} If token cannot be obtained or created
+   */
   private async relegateTokenStatus(): Promise<IrelegateTokenStatusRes> {
     const response: IrelegateTokenStatusRes = {
       success: false,
@@ -525,24 +558,15 @@ export class Pesapal {
   }
 
   /**
- * This method constructs the parameters from the object.
- * The method takes the following parameters:
- * * `paymentDetails`: The payment details object.
- * * `notificationId`: The notification ID.
- * * `id`: The ID of the payment.
- * * `description`: The description of the payment.
- *
- * The method returns an object with the following properties:
- * * `id`: The ID of the payment.
- * * `currency`: The currency of the payment.
- * * `amount`: The amount of the payment.
- * * `description`: The description of the payment.
- * * `callback_url`: The callback URL of the payment.
- * * `notification_id`: The notification ID of the payment.
- * * `billing_address`: The billing address of the payer.
- * * `countryCode`: The country code to map country the payment is from.
- * * `countryCurrency`: The countriesmoney currency.
- */
+   * Constructs the parameters from the object
+   * @private
+   * @param {IpayDetails} paymentDetails - The payment details
+   * @param {string} id - The ID of the payment
+   * @param {string} description - The description of the payment
+   * @param {string} [countryCode='UG'] - The country code
+   * @param {string} [countryCurrency='UGA'] - The country currency
+   * @returns {Object} The constructed parameters
+   */
   private constructParamsFromObj(
     paymentDetails: IpayDetails,
     id: string,
@@ -579,10 +603,11 @@ export class Pesapal {
   }
 
   /**
- * This method checks if the token is present.
- * The method returns `true` if the token is present, and `false` otherwise.
- */
-  private hasToken() {
+   * Checks if the token is present
+   * @private
+   * @returns {boolean} True if the token is present, false otherwise
+   */
+  private hasToken(): boolean {
     return Boolean(this.token?.token);
   }
 }

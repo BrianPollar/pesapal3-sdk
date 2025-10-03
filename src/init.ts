@@ -1,87 +1,157 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 /**
- * The Pesapal class is responsible for managing the configuration and initialization of the PesaPal payment gateway.
- *
- * The class takes a configuration object of type `Iconfig` in the constructor,
- * which defines the necessary settings for the PesaPal integration, such as
- * the environment, consumer key, consumer secret, IPN URL, and callback URL.
- *
- * The `run()` method is used to initialize the PesaPal payment gateway
- * by registering the IPN endpoint and retrieving the IPN endpoints.
- * It returns the instance of the `PesaPalController` class, which can be used to interact with the PesaPal API.
+ * @file PesaPal SDK Initialization
+ * @description Provides configuration and initialization for the PesaPal payment gateway integration
+ * @module init
  */
+
+/* eslint-disable @typescript-eslint/naming-convention */
+import { TnotificationMethodType } from './types/core-types';
 import { PesaPalInvalidConfigError } from './utils/error-handler';
-import { Pesapal } from './utils/pesapal';
+import { logger, Pesapal } from './utils/pesapal';
 
 /**
- * This interface defines the configuration for PesaPal.
+ * Configuration interface for PesaPal SDK initialization
+ * @interface Iconfig
+ * @property {'sandbox' | 'live'} PESAPAL_ENVIRONMENT - The environment for PesaPal ('sandbox' or 'live')
+ * @property {string} PESAPAL_CONSUMER_KEY - The consumer key for PesaPal API authentication
+ * @property {string} PESAPAL_CONSUMER_SECRET - The consumer secret for PesaPal API authentication
+ * @property {string[]} PESAPAL_IPN_URLS - Array of Instant Payment Notification (IPN) URLs to register
  */
 export interface Iconfig {
 
   /**
-   * The environment for PesaPal.
-   *
-   * Can be either `sandbox` or `live`.
+   * The environment for PesaPal integration
+   * @type {'sandbox' | 'live'}
    */
   PESAPAL_ENVIRONMENT: 'sandbox' | 'live';
 
   /**
-   * The consumer key for PesaPal.
+   * The consumer key for PesaPal API authentication
+   * @type {string}
    */
   PESAPAL_CONSUMER_KEY: string;
 
   /**
-   * The consumer secret for PesaPal.
+   * The consumer secret for PesaPal API authentication
+   * @type {string}
    */
   PESAPAL_CONSUMER_SECRET: string;
 
   /**
-   * The IPN URL for PesaPal.
+   * Array of Instant Payment Notification (IPN) URLs to register with PesaPal
+   * These URLs will receive payment status updates
+   * @type {string[]}
    */
-  PESAPAL_IPN_URLS: string[];
+  PESAPAL_IPN_URLS: {
+    url: string;
+
+    /**
+     * The notification method type for the IPN URL
+     * default is GET
+     * @type {TnotificationMethodType}
+     */
+    notificationMethodType?: TnotificationMethodType;
+   }[];
+
+  /**
+   * The delay in milliseconds between IPN registrations
+   * default is 10000
+   * @type {number}
+   */
+  PESAPAL_IPN_DELAY?: number;
 }
 
-
-export const initialisePesapal = async(config: Iconfig) => {
-  // validate config
+/**
+ * Initializes and configures the PesaPal payment gateway
+ * @async
+ * @function initialisePesapal
+ * @param {Iconfig} config - Configuration object for PesaPal integration
+ * @returns {Promise<Pesapal>} A promise that resolves to an initialized Pesapal instance
+ * @throws {PesaPalInvalidConfigError} If the configuration is invalid
+ * @throws {Error} If IPN registration or endpoint retrieval fails
+ *
+ * @example
+ * const config = {
+ *   PESAPAL_ENVIRONMENT: 'sandbox',
+ *   PESAPAL_CONSUMER_KEY: 'your-consumer-key',
+ *   PESAPAL_CONSUMER_SECRET: 'your-consumer-secret',
+ *   PESAPAL_IPN_URLS: ['https://your-domain.com/ipn']
+ * };
+ *
+ * try {
+ *   const pesapal = await initialisePesapal(config);
+ *   // Use pesapal instance for payment operations
+ * } catch (error) {
+ *   console.error('Initialization failed:', error);
+ * }
+ */
+export const initialisePesapal = async(config: Iconfig): Promise<Pesapal> => {
+  // Validate required configuration
   if (!config.PESAPAL_ENVIRONMENT ||
     !config.PESAPAL_CONSUMER_KEY ||
     !config.PESAPAL_CONSUMER_SECRET ||
     !config.PESAPAL_IPN_URLS) {
-    throw new PesaPalInvalidConfigError('Invalid configuration');
+    throw new PesaPalInvalidConfigError('Invalid configuration: Missing required fields');
   }
 
+  // Validate IPN URLs array
   if (!Array.isArray(config.PESAPAL_IPN_URLS)) {
-    throw new PesaPalInvalidConfigError('Invalid IPN URLS');
+    throw new PesaPalInvalidConfigError('Invalid IPN URLS: Must be an array');
   }
 
   if (config.PESAPAL_IPN_URLS.length === 0) {
-    throw new PesaPalInvalidConfigError('Invalid IPN URLS');
+    throw new PesaPalInvalidConfigError('Invalid IPN URLS: Array cannot be empty');
   }
 
-  // must have valid urls
+  // Validate URL format for each IPN URL
   config.PESAPAL_IPN_URLS.forEach((url) => {
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      throw new PesaPalInvalidConfigError('Invalid IPN URLS');
+    if (!url.url.startsWith('http://') && !url.url.startsWith('https://')) {
+      throw new PesaPalInvalidConfigError(`Invalid IPN URL: ${url.url} - Must start with http:// or https://`);
     }
 
-    // regex to validate url
-    const urlRegex = /^(http|https):\/\/(localhost(:\d{1,5})?|(www\.)?[a-z0-9\-.]{1,}\.[a-z]{2,})([\/?#].*)?$/i;
+    // Regex to validate URL format
+    const urlRegex = /^(http|https):\/\/(localhost(:\d{1,5})?|(www\.)?[a-z0-9\-.]+\.[a-z]{2,})([\/?#].*)?$/i;
 
-    if (!urlRegex.test(url)) {
-      throw new PesaPalInvalidConfigError('Invalid IPN URLS');
+    if (!urlRegex.test(url.url)) {
+      throw new PesaPalInvalidConfigError(`Invalid IPN URL format: ${url.url}`);
     }
   });
 
+  // Initialize Pesapal instance
   const paymentInstance = new Pesapal(config);
 
-  const promises = config.PESAPAL_IPN_URLS.map((url) => {
-    return paymentInstance.registerIpn(url);
-  });
+  try {
+    const sleep = (ms: number) => new Promise(resolve => {
+      // Note: setTimeout is the standard way to block execution in JS
+      // We use a Promise to make it compatible with 'await'.
+      setTimeout(resolve, ms);
+    });
 
-  await Promise.all(promises);
+    // --- Your Original Code Modified ---
+    const DELAY_MS = config.PESAPAL_IPN_DELAY || 10000; // 10 seconds
 
-  await paymentInstance.getIpnEndPoints();
+    // Register all IPN URLs in parallel
+    // go one by one
+    for (const url of config.PESAPAL_IPN_URLS) {
+      await paymentInstance.registerIpn(url.url, url.notificationMethodType);
 
-  return paymentInstance;
+      // Check if there are more URLs to process.
+      // We pause *after* a successful call, unless it was the very last one.
+      const currentIndex = config.PESAPAL_IPN_URLS.indexOf(url);
+      const isLastUrl = currentIndex === config.PESAPAL_IPN_URLS.length - 1;
+
+      if (!isLastUrl) {
+        // Pause for 10 seconds before starting the next iteration
+        logger.info(`Pausing for ${DELAY_MS / 1000} seconds to avoid rate limiting...`);
+        await sleep(DELAY_MS);
+      }
+    }
+
+    // Refresh IPN endpoints
+    await paymentInstance.getIpnEndPoints();
+
+    return paymentInstance;
+  } catch (error) {
+    throw new Error(`Failed to initialize PesaPal: ${error instanceof Error ? error.message : String(error)}`);
+  }
 };

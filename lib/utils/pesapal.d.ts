@@ -1,116 +1,151 @@
+/**
+ * @file PesaPal SDK for TypeScript
+ * @description A comprehensive SDK for integrating with PesaPal payment gateway
+ * @module pesapal
+ */
 import * as tracer from 'tracer';
 import { Iconfig } from '../init';
 import { IgetIpnEndPointsRes, IgetTokenRes, IgetTransactionStatusRes, IipnResponse, IpayDetails, IpesaPalToken, IrefundRequestReq, IrefundRequestResComplete, IregisterIpnRes, IsubmitOrderRes, TnotificationMethodType } from '../types/core-types';
+/**
+ * Logger instance for the PesaPal SDK
+ * @type {tracer.Tracer.Logger}
+ */
 export declare const logger: tracer.Tracer.Logger<string>;
+/**
+ * Converts a value to string, handling objects by JSON stringification
+ * @template T - The type of the input value
+ * @param {T} val - The value to stringify
+ * @returns {string} The stringified value
+ */
 export declare const stringifyIfObj: <T>(val: T) => string;
 /**
- * This class is a controller for PesaPal payments.
- * The `token` property is the PesaPal token.
- * The `ipns` property is an array of IIPnResponse objects.
- * The `defaultHeaders` property is an object with the default headers for the requests.
- * The `callbackUrl` property is the main callback URL.
- * The `notificationId` property is the notification ID.
+ * Main class for interacting with the PesaPal API
+ * @class Pesapal
+ * @description Provides methods to interact with PesaPal payment gateway
  */
 export declare class Pesapal {
     config: Iconfig;
+    /**
+     * The notification ID for IPN (Instant Payment Notification)
+     * @type {string}
+     */
     notificationId: string;
+    /**
+     * Default headers for HTTP requests
+     * @type {Object}
+     * @property {string} Accept - Accept header
+     * @property {string} Content-Type - Content type header
+     */
     defaultHeaders: {
         Accept: string;
         'Content-Type': string;
     };
+    /**
+     * Array of registered IPN (Instant Payment Notification) endpoints
+     * @type {IipnResponse[]}
+     */
     ipns: IipnResponse[];
+    /**
+     * Base URL for PesaPal API
+     * @type {string}
+     */
     pesapalUrl: string;
+    /**
+     * Authentication token for PesaPal API
+     * @type {IpesaPalToken}
+     */
     token: IpesaPalToken;
+    /**
+     * Creates a new instance of the Pesapal class
+     * @constructor
+     * @param {Iconfig} config - Configuration object containing PesaPal credentials
+     * @param {string} config.PESAPAL_ENVIRONMENT - Environment type ('live' or 'sandbox')
+     */
     constructor(config: Iconfig);
     /**
-     * Intercepts Axios requests and adds the PesaPal token to the Authorization header if it is available.
-     * This ensures that the PesaPal token is included in all outgoing requests.
+     * Intercepts Axios requests to add authorization headers
+     * @private
+     * @returns {void}
      */
     interceptAxios(): void;
     /**
-   * This method registers the IPN URL with PesaPal.
-   * The method returns a promise with the following properties:
-   *
-   * * `success`: Indicates whether the request was successful.
-   */
+     * Registers an IPN (Instant Payment Notification) URL with PesaPal
+     * @async
+     * @param {string} [ipn] - The IPN URL to register
+     * @param {TnotificationMethodType} [notificationMethodType='GET'] - The notification method type
+     * @returns {Promise<IregisterIpnRes>} Promise that resolves when IPN is registered
+     * @throws {Error} If token cannot be obtained or IPN registration fails
+     */
     registerIpn(ipn?: string, notificationMethodType?: TnotificationMethodType): Promise<IregisterIpnRes>;
     /**
-   * This method gets the IPN endpoints from PesaPal.
-   * The method returns a promise with the following properties:
-   *
-   * * `success`: Indicates whether the request was successful.
-   */
+     * Retrieves the list of registered IPN endpoints
+     * @async
+     * @returns {Promise<IgetIpnEndPointsRes>} Promise that resolves with the list of IPN endpoints
+     * @throws {Error} If token cannot be obtained or IPN endpoints cannot be retrieved
+     */
     getIpnEndPoints(): Promise<IgetIpnEndPointsRes>;
     /**
-   * This method submits the order to PesaPal.
-   * The method takes the following parameters:
-   * * `paymentDetails`: The payment details object.
-   * * `productId`: The ID of the product.
-   * * `description`: The description of the payment.
-   *
-   * The method returns a promise with the following properties:
-   * * `success`: Indicates whether the request was successful.
-   * * `status`: The status of the order.
-   * * `pesaPalOrderRes`: The PesaPal order response.
-   */
+     * Submits an order to PesaPal
+     * @async
+     * @param {IpayDetails} paymentDetails - The payment details
+     * @param {string} productId - The product ID
+     * @param {string} description - The order description
+     * @returns {Promise<IsubmitOrderRes>} Promise that resolves with the order submission result
+     * @throws {Error} If input validation fails or order submission fails
+     */
     submitOrder(paymentDetails: IpayDetails, productId: string, description: string): Promise<IsubmitOrderRes>;
     /**
-   * This method gets the transaction status from PesaPal.
-   * The method takes the following parameters:
-   * * `orderTrackingId`: The order tracking ID.
-   *
-   * The method returns a promise with the following properties:
-   * * `success`: Indicates whether the request was successful.
-   * * `response`: The response from PesaPal.
-   */
+     * Gets the status of a transaction
+     * @async
+     * @param {string} orderTrackingId - The order tracking ID
+     * @returns {Promise<IgetTransactionStatusRes>} Promise that resolves with the transaction status
+     * @throws {Error} If token cannot be obtained or transaction status cannot be retrieved
+     */
     getTransactionStatus(orderTrackingId: string): Promise<IgetTransactionStatusRes>;
     /**
-     * Sends a refund request for a transaction.
-     * @param refunReqObj - The refund request object.
-     * @returns A promise that resolves to the refund request response.
+     * Submits a refund request for a transaction
+     * @async
+     * @param {IrefundRequestReq} refunReqObj - The refund request object
+     * @returns {Promise<IrefundRequestResComplete>} Promise that resolves with the refund request result
+     * @throws {Error} If token cannot be obtained or refund request fails
      */
     refundRequest(refunReqObj: IrefundRequestReq): Promise<IrefundRequestResComplete>;
     /**
-   * This method gets the PesaPal token.
-   * The method returns a promise with the following properties:
-   *
-   * * `success`: Indicates whether the request was successful.
-   * * `err`: The error, if any.
-   */
+     * Gets the PesaPal token
+     * @async
+     * @returns {Promise<IgetTokenRes>} Promise that resolves with the token
+     * @throws {Error} If token cannot be obtained
+     */
     getToken(): Promise<IgetTokenRes>;
+    /**
+     * Checks if the token is expired
+     * @private
+     * @returns {boolean} True if the token is expired, false otherwise
+     */
     private tokenExpired;
     /**
-   * This method checks the status of the token and creates a new token if it is expired.
-   *
-   * The method returns a promise with the following properties:
-   *
-   * * `success`: Indicates whether the request was successful.
-   * * `madeNewToken`: Indicates whether a new token was created.
-   */
+     * Checks the status of the token and creates a new token if it is expired
+     * @async
+     * @private
+     * @returns {Promise<IrelegateTokenStatusRes>} Promise that resolves with the token status
+     * @throws {Error} If token cannot be obtained or created
+     */
     private relegateTokenStatus;
     /**
-   * This method constructs the parameters from the object.
-   * The method takes the following parameters:
-   * * `paymentDetails`: The payment details object.
-   * * `notificationId`: The notification ID.
-   * * `id`: The ID of the payment.
-   * * `description`: The description of the payment.
-   *
-   * The method returns an object with the following properties:
-   * * `id`: The ID of the payment.
-   * * `currency`: The currency of the payment.
-   * * `amount`: The amount of the payment.
-   * * `description`: The description of the payment.
-   * * `callback_url`: The callback URL of the payment.
-   * * `notification_id`: The notification ID of the payment.
-   * * `billing_address`: The billing address of the payer.
-   * * `countryCode`: The country code to map country the payment is from.
-   * * `countryCurrency`: The countriesmoney currency.
-   */
+     * Constructs the parameters from the object
+     * @private
+     * @param {IpayDetails} paymentDetails - The payment details
+     * @param {string} id - The ID of the payment
+     * @param {string} description - The description of the payment
+     * @param {string} [countryCode='UG'] - The country code
+     * @param {string} [countryCurrency='UGA'] - The country currency
+     * @returns {Object} The constructed parameters
+     */
     private constructParamsFromObj;
     /**
-   * This method checks if the token is present.
-   * The method returns `true` if the token is present, and `false` otherwise.
-   */
+     * Checks if the token is present
+     * @private
+     * @returns {boolean} True if the token is present, false otherwise
+     */
     private hasToken;
 }

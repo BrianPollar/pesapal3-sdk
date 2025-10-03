@@ -1,0 +1,23 @@
+/**
+ * TypeDoc configuration for the monorepo.
+ * This file specifies how to generate documentation from TSDoc comments.
+ */
+{
+  "entryPoints": [
+    "./src"
+  ],
+  "out": "typedoc",
+  "name": "PesaPal 3 SDK Documentation",
+  "favicon": "statics/logo.svg",
+  "tsconfig": "./tsconfig.typedoc.json",
+  "excludeExternals": true,
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "hideGenerator": true,
+  "readme": "./README.md",
+  "themeColor": "#cb9820",
+  "plugin": [
+    "typedoc-plugin-missing-exports",
+    "typedoc-material-theme"
+  ]
+}
