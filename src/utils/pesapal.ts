@@ -69,17 +69,6 @@ export class Pesapal {
   notificationId: string;
 
   /**
-   * Default headers for HTTP requests
-   * @type {Object}
-   * @property {string} Accept - Accept header
-   * @property {string} Content-Type - Content type header
-   */
-  defaultHeaders = {
-    Accept: 'application/json',
-    'Content-Type': 'application/json'
-  };
-
-  /**
    * Array of registered IPN (Instant Payment Notification) endpoints
    * @type {IipnResponse[]}
    */
@@ -115,7 +104,8 @@ export class Pesapal {
     this.axiosInstance = axios.create({
       baseURL: this.pesapalUrl,
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
       }
     });
 
@@ -129,6 +119,7 @@ export class Pesapal {
    */
   interceptAxios(): void {
     this.axiosInstance.interceptors.request.use((config) => {
+      // add default headers
       if (!this.tokenExpired()) {
         config.headers.Authorization = 'Bearer ' + this.token?.token;
       } else {
@@ -163,17 +154,11 @@ export class Pesapal {
       ipn_notification_type: notificationMethodType
     };
 
-    const headers = {
-      ...this.defaultHeaders,
-      Authorization: 'Bearer  ' + this.token?.token
-    };
-
     return new Promise((resolve, reject) => {
       this.axiosInstance
         .post(
           '/api/URLSetup/RegisterIPN',
-          parameters,
-          { headers }
+          parameters
         )
         .then(res => {
           const response = res.data as IipnResponse;
@@ -208,17 +193,9 @@ export class Pesapal {
       return new Promise((resolve, reject) => reject(gotToken));
     }
 
-    const headers = {
-      ...this.defaultHeaders,
-      Authorization: 'Bearer  ' + this.token.token
-    };
-
     return new Promise((resolve, reject) => {
       this.axiosInstance
-        .get(
-          '/api/URLSetup/GetIpnList',
-          { headers }
-        )
+        .get('/api/URLSetup/GetIpnList')
         .then(res => {
           const response = res.data as IipnResponse[];
 
@@ -308,18 +285,10 @@ export class Pesapal {
         paymentDetails.notification_id = this.ipns.find(ipn => ipn.url === paymentDetails.notification_ipn_url)?.ipn_id;
       }
 
-
-      // Prepare headers with trimmed Bearer token
-      const headers = {
-        ...this.defaultHeaders,
-        Authorization: `Bearer ${this.token.token.trim()}`
-      };
-
       // Make API call
       const response = await this.axiosInstance.post(
         '/api/Transactions/SubmitOrderRequest',
-        this.constructParamsFromObj(paymentDetails, productId, description),
-        { headers }
+        this.constructParamsFromObj(paymentDetails, productId, description)
       );
 
       // Handle response
@@ -376,17 +345,9 @@ export class Pesapal {
       return new Promise((resolve, reject) => reject(gotToken));
     }
 
-    const headers = {
-      ...this.defaultHeaders,
-      Authorization: 'Bearer  ' + this.token.token
-    };
-
     return new Promise((resolve, reject) => {
       this.axiosInstance
-        .get(
-          `/api/Transactions/GetTransactionStatus?orderTrackingId=${orderTrackingId}`,
-          { headers }
-        ).then(res => {
+        .get(`/api/Transactions/GetTransactionStatus?orderTrackingId=${orderTrackingId}`).then(res => {
           const response = res.data as IgetTransactionStatusRes;
 
           if (response.error) {
@@ -417,17 +378,11 @@ export class Pesapal {
       return new Promise((resolve, reject) => reject(gotToken));
     }
 
-    const headers = {
-      ...this.defaultHeaders,
-      Authorization: 'Bearer  ' + this.token.token
-    };
-
     return new Promise((resolve, reject) => {
       this.axiosInstance
         .post(
           '/api/Transactions/RefundRequestt',
-          refunReqObj,
-          { headers }
+          refunReqObj
         )
         .then(res => {
           const response = res.data as IrefundRequestRes;
@@ -451,9 +406,6 @@ export class Pesapal {
    * @throws {Error} If token cannot be obtained
    */
   getToken(): Promise<IgetTokenRes> {
-    const headers = {
-      ...this.defaultHeaders
-    };
     const parameters = {
       consumer_key: this.config.PESAPAL_CONSUMER_KEY,
       consumer_secret: this.config.PESAPAL_CONSUMER_SECRET
@@ -463,8 +415,7 @@ export class Pesapal {
       this.axiosInstance
         .post(
           '/api/Auth/RequestToken',
-          parameters,
-          { headers }
+          parameters
         )
         .then(res => {
           const data = res.data as IpesaPalToken;
