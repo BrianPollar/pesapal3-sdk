@@ -32,16 +32,6 @@ export declare class Pesapal {
      */
     notificationId: string;
     /**
-     * Default headers for HTTP requests
-     * @type {Object}
-     * @property {string} Accept - Accept header
-     * @property {string} Content-Type - Content type header
-     */
-    defaultHeaders: {
-        Accept: string;
-        'Content-Type': string;
-    };
-    /**
      * Array of registered IPN (Instant Payment Notification) endpoints
      * @type {IipnResponse[]}
      */
