@@ -3,6 +3,7 @@
  * @description A comprehensive SDK for integrating with PesaPal payment gateway
  * @module pesapal
  */
+import { AxiosInstance } from 'axios';
 import * as tracer from 'tracer';
 import { Iconfig } from '../init';
 import { IgetIpnEndPointsRes, IgetTokenRes, IgetTransactionStatusRes, IipnResponse, IpayDetails, IpesaPalToken, IrefundRequestReq, IrefundRequestResComplete, IregisterIpnRes, IsubmitOrderRes, TnotificationMethodType } from '../types/core-types';
@@ -55,6 +56,7 @@ export declare class Pesapal {
      * @type {IpesaPalToken}
      */
     token: IpesaPalToken;
+    axiosInstance: AxiosInstance;
     /**
      * Creates a new instance of the Pesapal class
      * @constructor

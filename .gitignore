@@ -5,3 +5,6 @@ lib/
 logs/
 logs/*
 /logs
+/typedoc
+typedoc
+typedoc/

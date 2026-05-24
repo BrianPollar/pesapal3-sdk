@@ -5,7 +5,7 @@
  */
 
 /* eslint-disable @typescript-eslint/naming-convention */
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as tracer from 'tracer';
@@ -97,6 +97,8 @@ export class Pesapal {
    */
   token: IpesaPalToken;
 
+  axiosInstance: AxiosInstance;
+
   /**
    * Creates a new instance of the Pesapal class
    * @constructor
@@ -109,6 +111,14 @@ export class Pesapal {
     } else {
       this.pesapalUrl = 'https://cybqa.pesapal.com/pesapalv3';
     }
+
+    this.axiosInstance = axios.create({
+      baseURL: this.pesapalUrl,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
     this.interceptAxios();
   }
 
@@ -118,7 +128,7 @@ export class Pesapal {
    * @returns {void}
    */
   interceptAxios(): void {
-    axios.interceptors.request.use((config) => {
+    this.axiosInstance.interceptors.request.use((config) => {
       if (!this.tokenExpired()) {
         config.headers.Authorization = 'Bearer ' + this.token?.token;
       } else {
@@ -159,9 +169,9 @@ export class Pesapal {
     };
 
     return new Promise((resolve, reject) => {
-      axios
+      this.axiosInstance
         .post(
-          `${this.pesapalUrl}/api/URLSetup/RegisterIPN`,
+          '/api/URLSetup/RegisterIPN',
           parameters,
           { headers }
         )
@@ -204,9 +214,9 @@ export class Pesapal {
     };
 
     return new Promise((resolve, reject) => {
-      axios
+      this.axiosInstance
         .get(
-          `${this.pesapalUrl}/api/URLSetup/GetIpnList`,
+          '/api/URLSetup/GetIpnList',
           { headers }
         )
         .then(res => {
@@ -306,8 +316,8 @@ export class Pesapal {
       };
 
       // Make API call
-      const response = await axios.post(
-        `${this.pesapalUrl}/api/Transactions/SubmitOrderRequest`,
+      const response = await this.axiosInstance.post(
+        '/api/Transactions/SubmitOrderRequest',
         this.constructParamsFromObj(paymentDetails, productId, description),
         { headers }
       );
@@ -372,9 +382,9 @@ export class Pesapal {
     };
 
     return new Promise((resolve, reject) => {
-      axios
+      this.axiosInstance
         .get(
-          `${this.pesapalUrl}/api/Transactions/GetTransactionStatus?orderTrackingId=${orderTrackingId}`,
+          `/api/Transactions/GetTransactionStatus?orderTrackingId=${orderTrackingId}`,
           { headers }
         ).then(res => {
           const response = res.data as IgetTransactionStatusRes;
@@ -413,9 +423,9 @@ export class Pesapal {
     };
 
     return new Promise((resolve, reject) => {
-      axios
+      this.axiosInstance
         .post(
-          `${this.pesapalUrl}/api/Transactions/RefundRequestt`,
+          '/api/Transactions/RefundRequestt',
           refunReqObj,
           { headers }
         )
@@ -450,9 +460,9 @@ export class Pesapal {
     };
 
     return new Promise((resolve, reject) => {
-      axios
+      this.axiosInstance
         .post(
-          `${this.pesapalUrl}/api/Auth/RequestToken`,
+          '/api/Auth/RequestToken',
           parameters,
           { headers }
         )
